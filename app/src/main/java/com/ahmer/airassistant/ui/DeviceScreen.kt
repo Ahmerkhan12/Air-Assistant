@@ -30,6 +30,7 @@ import com.ahmer.airassistant.bluetooth.AirBluetoothManager
 import com.ahmer.airassistant.bluetooth.BluetoothDeviceInfo
 import com.ahmer.airassistant.settings.SettingsRepository
 import com.ahmer.airassistant.settings.UserSettings
+import com.ahmer.airassistant.ui.components.AirPodsBatteryCard
 import com.ahmer.airassistant.ui.components.M3Card
 import com.ahmer.airassistant.ui.components.SectionTitle
 import com.ahmer.airassistant.ui.components.StatusChip
@@ -344,6 +345,11 @@ fun PolishedDeviceCard(
                     color = MaterialTheme.colorScheme.outline
                 )
             }
+        }
+
+        if (device.isConnected && device.batteryInfo != null && device.batteryInfo.hasAnyBattery) {
+            Spacer(modifier = Modifier.height(10.dp))
+            AirPodsBatteryCard(batteryInfo = device.batteryInfo)
         }
     }
 }

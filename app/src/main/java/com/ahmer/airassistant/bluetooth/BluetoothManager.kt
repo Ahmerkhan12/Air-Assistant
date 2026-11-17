@@ -7,6 +7,11 @@ import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothHeadset
 import android.bluetooth.BluetoothA2dp
 import android.bluetooth.BluetoothProfile
+import android.bluetooth.le.BluetoothLeScanner
+import android.bluetooth.le.ScanCallback
+import android.bluetooth.le.ScanFilter
+import android.bluetooth.le.ScanResult
+import android.bluetooth.le.ScanSettings
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -19,8 +24,11 @@ import android.util.Log
 import androidx.core.content.ContextCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -40,8 +48,16 @@ class AirBluetoothManager(private val context: Context) {
     private var a2dpProfile: BluetoothA2dp? = null
     private var currentSelectedAddress: String? = null
 
+    private var bleScanner: BluetoothLeScanner? = null
+    private var isBleScanning = false
+    private var lastActiveAirPodsConnected = false
+
     private val _bluetoothState = MutableStateFlow(BluetoothState())
     val bluetoothState: StateFlow<BluetoothState> = _bluetoothState.asStateFlow()
+
+    // Event flow to trigger connection popup modal
+    private val _connectionPopupEvent = MutableSharedFlow<AirPodsBatteryInfo>(replay = 0, extraBufferCapacity = 2)
+    val connectionPopupEvent: SharedFlow<AirPodsBatteryInfo> = _connectionPopupEvent.asSharedFlow()
 
     private val profileListener = object : BluetoothProfile.ServiceListener {
         override fun onServiceConnected(profile: Int, proxy: BluetoothProfile) {
@@ -71,7 +87,51 @@ class AirBluetoothManager(private val context: Context) {
         override fun onReceive(context: Context?, intent: Intent?) {
             val action = intent?.action ?: return
             Log.d(tag, "Bluetooth broadcast received: $action")
-            refreshDevices()
+
+            when (action) {
+                "android.bluetooth.device.action.BATTERY_LEVEL_CHANGED" -> {
+                    val level = intent.getIntExtra("android.bluetooth.device.extra.BATTERY_LEVEL", -1)
+                    val device = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE, BluetoothDevice::class.java)
+                    } else {
+                        @Suppress("DEPRECATION")
+                        intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
+                    }
+                    if (level in 0..100) {
+                        Log.d(tag, "Device battery broadcast: ${device?.name ?: "Unknown"} -> $level%")
+                        updateOverallBattery(level)
+                    }
+                }
+                BluetoothDevice.ACTION_ACL_CONNECTED -> {
+                    refreshDevices()
+                    startBleScan()
+                }
+                BluetoothDevice.ACTION_ACL_DISCONNECTED -> {
+                    refreshDevices()
+                }
+                else -> {
+                    refreshDevices()
+                }
+            }
+        }
+    }
+
+    private val bleScanCallback = object : ScanCallback() {
+        override fun onScanResult(callbackType: Int, result: ScanResult?) {
+            val scanRecord = result?.scanRecord ?: return
+            val manufacturerData = scanRecord.getManufacturerSpecificData(AirPodsBleDecoder.APPLE_MANUFACTURER_ID)
+                ?: return
+
+            val decoded = AirPodsBleDecoder.decode(manufacturerData)
+            if (decoded != null && decoded.hasAnyBattery) {
+                Log.d(tag, "Decoded AirPods battery: Left=${decoded.left}%, Right=${decoded.right}%, Case=${decoded.case}%")
+                updateAirPodsBattery(decoded)
+            }
+        }
+
+        override fun onScanFailed(errorCode: Int) {
+            Log.w(tag, "AirPods BLE scan failed: errorCode=$errorCode")
+            isBleScanning = false
         }
     }
 
@@ -79,6 +139,7 @@ class AirBluetoothManager(private val context: Context) {
         registerReceivers()
         connectProfiles()
         refreshDevices()
+        startBleScan()
     }
 
     fun setSelectedDeviceAddress(address: String?) {
@@ -97,6 +158,20 @@ class AirBluetoothManager(private val context: Context) {
         }
     }
 
+    fun hasScanPermission(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.BLUETOOTH_SCAN
+            ) == PackageManager.PERMISSION_GRANTED
+        } else {
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        }
+    }
+
     @SuppressLint("MissingPermission")
     private fun getDeviceDisplayName(device: BluetoothDevice): String {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -106,17 +181,112 @@ class AirBluetoothManager(private val context: Context) {
         }
     }
 
+    /**
+     * Reads battery level using Android's internal getBatteryLevel reflection method.
+     */
+    @SuppressLint("MissingPermission")
+    fun getDeviceBatteryLevel(device: BluetoothDevice): Int? {
+        return try {
+            val method = device.javaClass.getMethod("getBatteryLevel")
+            val level = method.invoke(device) as? Int
+            if (level != null && level in 0..100) level else null
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    fun startBleScan() {
+        if (isBleScanning || !hasScanPermission() || adapter == null || !adapter.isEnabled) {
+            return
+        }
+
+        try {
+            bleScanner = adapter.bluetoothLeScanner
+            if (bleScanner == null) return
+
+            val scanFilter = ScanFilter.Builder()
+                .setManufacturerData(AirPodsBleDecoder.APPLE_MANUFACTURER_ID, byteArrayOf())
+                .build()
+
+            val scanSettings = ScanSettings.Builder()
+                .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+                .setReportDelay(0)
+                .build()
+
+            bleScanner?.startScan(listOf(scanFilter), scanSettings, bleScanCallback)
+            isBleScanning = true
+            Log.d(tag, "Started AirPods BLE scan for battery beacons")
+        } catch (e: SecurityException) {
+            Log.w(tag, "Security exception starting BLE scan: ${e.message}")
+        } catch (e: Exception) {
+            Log.w(tag, "Error starting BLE scan: ${e.message}")
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    fun stopBleScan() {
+        if (!isBleScanning) return
+        try {
+            bleScanner?.stopScan(bleScanCallback)
+            isBleScanning = false
+            Log.d(tag, "Stopped AirPods BLE scan")
+        } catch (e: Exception) {
+            Log.w(tag, "Error stopping BLE scan: ${e.message}")
+        }
+    }
+
+    private fun updateAirPodsBattery(newBattery: AirPodsBatteryInfo) {
+        _bluetoothState.update { current ->
+            val updatedActive = current.activeAirPods?.copy(batteryInfo = newBattery)
+            current.copy(
+                latestBatteryInfo = newBattery,
+                activeAirPods = updatedActive
+            )
+        }
+    }
+
+    private fun updateOverallBattery(overallPercent: Int) {
+        _bluetoothState.update { current ->
+            val existing = current.latestBatteryInfo ?: AirPodsBatteryInfo()
+            val updated = existing.copy(overall = overallPercent, lastUpdated = System.currentTimeMillis())
+            val updatedActive = current.activeAirPods?.copy(batteryInfo = updated)
+            current.copy(
+                latestBatteryInfo = updated,
+                activeAirPods = updatedActive
+            )
+        }
+    }
+
+    /**
+     * Triggers a preview of the AirPods connection popup for in-app testing.
+     */
+    fun triggerPopupPreview() {
+        val sampleBattery = _bluetoothState.value.latestBatteryInfo ?: AirPodsBatteryInfo(
+            left = 85,
+            right = 90,
+            case = 75,
+            isLeftCharging = true,
+            isRightCharging = false,
+            isCaseCharging = false,
+            modelName = "AirPods Pro"
+        )
+        _connectionPopupEvent.tryEmit(sampleBattery)
+    }
+
     @SuppressLint("MissingPermission")
     fun refreshDevices() {
         scope.launch {
             val isEnabled = adapter?.isEnabled == true
             val hasPermission = hasConnectPermission()
+            val hasScan = hasScanPermission()
 
-            if (!isEnabled || !hasPermission || adapter == null) {
+            if (adapter == null || !adapter.isEnabled || !hasPermission) {
                 _bluetoothState.update {
                     it.copy(
                         isBluetoothEnabled = isEnabled,
                         hasConnectPermission = hasPermission,
+                        hasScanPermission = hasScan,
                         connectedDevices = emptyList(),
                         bondedDevices = emptyList(),
                         activeAirPods = null,
@@ -136,15 +306,19 @@ class AirBluetoothManager(private val context: Context) {
                     val name = getDeviceDisplayName(device)
                     val address = device.address ?: ""
                     val isAirPods = isLikelyAirPods(name)
+                    val rawBattery = getDeviceBatteryLevel(device)
                     val existing = connectedSet[address]
                     val profiles = (existing?.supportedProfiles ?: emptyList()) + "HEADSET (HFP)"
+                    val battery = existing?.batteryInfo ?: (if (rawBattery != null) AirPodsBatteryInfo(overall = rawBattery) else null)
+
                     connectedSet[address] = BluetoothDeviceInfo(
                         name = name,
                         address = address,
                         isAirPods = isAirPods,
                         isConnected = true,
                         isBonded = true,
-                        supportedProfiles = profiles.distinct()
+                        supportedProfiles = profiles.distinct(),
+                        batteryInfo = battery
                     )
                 }
 
@@ -153,15 +327,19 @@ class AirBluetoothManager(private val context: Context) {
                     val name = getDeviceDisplayName(device)
                     val address = device.address ?: ""
                     val isAirPods = isLikelyAirPods(name)
+                    val rawBattery = getDeviceBatteryLevel(device)
                     val existing = connectedSet[address]
                     val profiles = (existing?.supportedProfiles ?: emptyList()) + "A2DP (Audio)"
+                    val battery = existing?.batteryInfo ?: (if (rawBattery != null) AirPodsBatteryInfo(overall = rawBattery) else null)
+
                     connectedSet[address] = BluetoothDeviceInfo(
                         name = name,
                         address = address,
                         isAirPods = isAirPods,
                         isConnected = true,
                         isBonded = true,
-                        supportedProfiles = profiles.distinct()
+                        supportedProfiles = profiles.distinct(),
+                        batteryInfo = battery
                     )
                 }
 
@@ -175,14 +353,14 @@ class AirBluetoothManager(private val context: Context) {
                                 audioDevice.type == AudioDeviceInfo.TYPE_BLE_HEADSET
                             ) {
                                 val name = audioDevice.productName?.toString() ?: "Bluetooth Audio"
-                                // AudioDeviceInfo does NOT expose MAC address — use name as key
                                 connectedSet[name] = BluetoothDeviceInfo(
                                     name = name,
                                     address = "",
                                     isAirPods = isLikelyAirPods(name),
                                     isConnected = true,
                                     isBonded = true,
-                                    supportedProfiles = listOf("Audio Active")
+                                    supportedProfiles = listOf("Audio Active"),
+                                    batteryInfo = _bluetoothState.value.latestBatteryInfo
                                 )
                             }
                         }
@@ -191,19 +369,23 @@ class AirBluetoothManager(private val context: Context) {
                     }
                 }
 
-                // 4. Collect paired/bonded devices (accurately marked with isConnected)
+                // 4. Collect paired/bonded devices
                 adapter.bondedDevices?.forEach { device ->
                     val name = getDeviceDisplayName(device)
                     val address = device.address ?: ""
                     val isAirPods = isLikelyAirPods(name)
                     val isConnectedNow = connectedSet.containsKey(address)
+                    val rawBattery = if (isConnectedNow) getDeviceBatteryLevel(device) else null
+                    val existing = connectedSet[address]
+
                     bondedList.add(
                         BluetoothDeviceInfo(
                             name = name,
                             address = address,
                             isAirPods = isAirPods,
                             isConnected = isConnectedNow,
-                            isBonded = true
+                            isBonded = true,
+                            batteryInfo = existing?.batteryInfo ?: (if (rawBattery != null) AirPodsBatteryInfo(overall = rawBattery) else null)
                         )
                     )
                 }
@@ -227,14 +409,27 @@ class AirBluetoothManager(private val context: Context) {
                 bondedList.firstOrNull { it.isAirPods }
             }
 
+            val isAirPodsNowConnected = targetActive != null && targetActive.isAirPods
+
+            // Check if connection just occurred: trigger connection popup modal!
+            if (!lastActiveAirPodsConnected && isAirPodsNowConnected) {
+                val batteryToShow = targetActive.batteryInfo ?: _bluetoothState.value.latestBatteryInfo ?: AirPodsBatteryInfo(
+                    modelName = targetActive.name
+                )
+                _connectionPopupEvent.tryEmit(batteryToShow)
+            }
+            lastActiveAirPodsConnected = isAirPodsNowConnected
+
             _bluetoothState.update {
                 it.copy(
                     isBluetoothEnabled = isEnabled,
                     hasConnectPermission = hasPermission,
+                    hasScanPermission = hasScan,
                     connectedDevices = connectedList,
                     bondedDevices = bondedList,
-                    activeAirPods = targetActive, // ONLY non-null if actively connected!
+                    activeAirPods = targetActive,
                     pairedAirPods = targetPaired,
+                    latestBatteryInfo = targetActive?.batteryInfo ?: it.latestBatteryInfo,
                     lastStateUpdateTime = System.currentTimeMillis()
                 )
             }
@@ -257,6 +452,7 @@ class AirBluetoothManager(private val context: Context) {
             addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED)
             addAction(BluetoothHeadset.ACTION_CONNECTION_STATE_CHANGED)
             addAction(BluetoothA2dp.ACTION_CONNECTION_STATE_CHANGED)
+            addAction("android.bluetooth.device.action.BATTERY_LEVEL_CHANGED")
         }
         ContextCompat.registerReceiver(
             context,
@@ -267,6 +463,7 @@ class AirBluetoothManager(private val context: Context) {
     }
 
     fun cleanUp() {
+        stopBleScan()
         try {
             context.unregisterReceiver(bluetoothReceiver)
         } catch (e: Exception) {

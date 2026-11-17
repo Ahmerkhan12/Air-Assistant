@@ -37,6 +37,9 @@ import com.ahmer.airassistant.bluetooth.BluetoothState
 import com.ahmer.airassistant.gesture.AirAccessibilityService
 import com.ahmer.airassistant.gesture.AirAssistantService
 import com.ahmer.airassistant.gesture.MediaButtonEvent
+import com.ahmer.airassistant.bluetooth.AirPodsBatteryInfo
+import com.ahmer.airassistant.ui.components.AirPodsBatteryCard
+import com.ahmer.airassistant.ui.components.AirPodsConnectionPopup
 import com.ahmer.airassistant.gesture.MediaEventBus
 import com.ahmer.airassistant.settings.SettingsRepository
 import com.ahmer.airassistant.settings.TriggerGesture
@@ -64,6 +67,21 @@ fun HomeScreen(
     val userSettings by settingsRepository.userSettingsFlow.collectAsState(initial = UserSettings())
     val eventLogs by MediaEventBus.events.collectAsState()
     val isServiceRunning by MediaEventBus.isServiceRunning.collectAsState()
+
+    var popupBatteryInfo by remember { mutableStateOf<AirPodsBatteryInfo?>(null) }
+
+    LaunchedEffect(Unit) {
+        bluetoothManager.connectionPopupEvent.collect { battery ->
+            popupBatteryInfo = battery
+        }
+    }
+
+    if (popupBatteryInfo != null) {
+        AirPodsConnectionPopup(
+            batteryInfo = popupBatteryInfo!!,
+            onDismiss = { popupBatteryInfo = null }
+        )
+    }
 
     LazyColumn(
         modifier = Modifier
@@ -129,7 +147,8 @@ fun HomeScreen(
         item {
             HeroDeviceStatusCard(
                 bluetoothState = bluetoothState,
-                onRefresh = { bluetoothManager.refreshDevices() }
+                onRefresh = { bluetoothManager.refreshDevices() },
+                onPreviewPopup = { bluetoothManager.triggerPopupPreview() }
             )
         }
 
@@ -236,11 +255,13 @@ fun HomeScreen(
 @Composable
 fun HeroDeviceStatusCard(
     bluetoothState: BluetoothState,
-    onRefresh: () -> Unit
+    onRefresh: () -> Unit,
+    onPreviewPopup: () -> Unit
 ) {
     val isConnected = bluetoothState.hasActiveAirPods
     val activeDevice = bluetoothState.activeAirPods
     val pairedDevice = bluetoothState.pairedAirPods
+    val batteryInfo = activeDevice?.batteryInfo ?: bluetoothState.latestBatteryInfo
 
     var isRotating by remember { mutableStateOf(false) }
     val rotationAngle by animateFloatAsState(
@@ -308,25 +329,48 @@ fun HeroDeviceStatusCard(
                 }
             }
 
-            IconButton(
-                onClick = {
-                    isRotating = true
-                    onRefresh()
-                },
-                modifier = Modifier.size(36.dp)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                Icon(
-                    Icons.Default.Refresh,
-                    contentDescription = "Refresh",
-                    modifier = Modifier
-                        .size(20.dp)
-                        .rotate(rotationAngle),
-                    tint = MaterialTheme.colorScheme.primary
-                )
+                IconButton(
+                    onClick = onPreviewPopup,
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Icon(
+                        Icons.Default.BatteryChargingFull,
+                        contentDescription = "Preview Connection Popup",
+                        modifier = Modifier.size(20.dp),
+                        tint = MaterialTheme.colorScheme.tertiary
+                    )
+                }
+
+                IconButton(
+                    onClick = {
+                        isRotating = true
+                        onRefresh()
+                    },
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Icon(
+                        Icons.Default.Refresh,
+                        contentDescription = "Refresh",
+                        modifier = Modifier
+                            .size(20.dp)
+                            .rotate(rotationAngle),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
         }
 
         Spacer(modifier = Modifier.height(14.dp))
+
+        // Persistent Battery Gauges
+        if (isConnected) {
+            AirPodsBatteryCard(batteryInfo = batteryInfo)
+            Spacer(modifier = Modifier.height(14.dp))
+        }
 
         HorizontalDivider(
             color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)

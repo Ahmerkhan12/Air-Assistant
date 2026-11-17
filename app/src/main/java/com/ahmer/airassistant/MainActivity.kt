@@ -83,6 +83,13 @@ class MainActivity : ComponentActivity() {
             ) {
                 permissionsToRequest.add(Manifest.permission.BLUETOOTH_CONNECT)
             }
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.BLUETOOTH_SCAN
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                permissionsToRequest.add(Manifest.permission.BLUETOOTH_SCAN)
+            }
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
