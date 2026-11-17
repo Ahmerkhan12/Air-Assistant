@@ -45,3 +45,4 @@ To preview the website locally on your computer:
    python -m http.server 8000
    ```
 2. Open your browser and navigate to `http://localhost:8000`.
+

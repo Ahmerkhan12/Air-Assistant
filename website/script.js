@@ -11,8 +11,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Default APK download path (can be relative or a GitHub release URL)
     apkFilename: 'AirAssistant-v1.0.0.apk',
     downloadPath: './downloads/AirAssistant-v1.0.0.apk',
-    // Fallback if hosted on GitHub (Ahmer can set their GitHub repo URL)
-    githubReleasesUrl: ''
+    // Fallback if hosted on GitHub (Ahmer's official GitHub repo)
+    githubReleasesUrl: 'https://github.com/Ahmerkhan12/Air-Assistant/releases/latest'
   };
 
   // Determine absolute download URL
@@ -159,3 +159,4 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 });
+
