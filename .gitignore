@@ -13,3 +13,5 @@ captures/
 .cxx
 local.properties
 .kotlin
+website/downloads/*.apk
+

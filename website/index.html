@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AirAssistant - Summon Gemini & Google Assistant via AirPods on Android</title>
+  <meta name="description" content="Bring Siri-like AI assistant control to your AirPods on Android. Double-tap or pinch to summon Google Assistant & Gemini instantly, even while playing music.">
+  <meta property="og:title" content="AirAssistant for Android">
+  <meta property="og:description" content="Summon Google Assistant and Gemini with your AirPods on Android.">
+  <meta property="og:type" content="website">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎧</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+
+  <!-- Background Glow & Grid Effects -->
+  <div class="bg-glow glow-top"></div>
+  <div class="bg-glow glow-bottom"></div>
+  <div class="grid-overlay"></div>
+
+  <!-- Navigation -->
+  <header class="navbar">
+    <div class="container nav-container">
+      <a href="#" class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"/>
+          </svg>
+        </div>
+        <span class="brand-name">AirAssistant</span>
+      </a>
+
+      <nav class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#compatibility">Compatibility</a>
+        <a href="#install">Install Guide</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+
+      <div class="nav-cta">
+        <a href="#download" class="btn btn-sm btn-primary">
+          <span>Download APK</span>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="container hero-grid">
+        <div class="hero-content">
+          <div class="badge-pill">
+            <span class="pulse-dot"></span>
+            <span>Version 1.0.0 Now Available</span>
+            <span class="badge-tag">Free & Open</span>
+          </div>
+
+          <h1 class="hero-title">
+            AirPods on Android, <br>
+            <span class="gradient-text">supercharged with AI.</span>
+          </h1>
+
+          <p class="hero-desc">
+            Double-tap or stem-pinch your AirPods to instantly trigger <strong>Google Assistant</strong> or <strong>Google Gemini</strong> on Android. Intercepts gestures smoothly even while Spotify or YouTube Music is actively playing.
+          </p>
+
+          <div class="hero-actions" id="download">
+            <a id="primary-download-btn" href="#" class="btn btn-lg btn-primary pulse-btn">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+              </svg>
+              <div class="btn-text-group">
+                <span class="btn-main-text">Download APK</span>
+                <span class="btn-sub-text">v1.0.0 • Android 10+ • Direct Download</span>
+              </div>
+            </a>
+
+            <button id="show-qr-btn" class="btn btn-lg btn-secondary">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="7"/>
+                <rect x="14" y="3" width="7" height="7"/>
+                <rect x="14" y="14" width="7" height="7"/>
+                <rect x="3" y="14" width="7" height="7"/>
+              </svg>
+              <span>Scan QR for Phone</span>
+            </button>
+          </div>
+
+          <div class="hero-trust">
+            <div class="trust-item">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <span>100% On-Device & Safe</span>
+            </div>
+            <div class="trust-item">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+              <span>No Play Store Account Needed</span>
+            </div>
+            <div class="trust-item">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+              <span>Zero Battery Drain Idle</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Interactive Phone Mockup -->
+        <div class="hero-visual">
+          <div class="phone-frame">
+            <div class="phone-speaker"></div>
+            <div class="phone-screen">
+              <!-- Mock App Screen Header -->
+              <div class="mock-status-bar">
+                <span>9:41</span>
+                <div class="mock-status-icons">
+                  <span class="mock-wifi">●●●</span>
+                  <span class="mock-bat">98%</span>
+                </div>
+              </div>
+
+              <div class="mock-app-body">
+                <div class="mock-app-nav">
+                  <div class="mock-avatar">🎧</div>
+                  <div>
+                    <div class="mock-title">AirAssistant</div>
+                    <div class="mock-status"><span class="status-indicator"></span> AirPods Pro Connected</div>
+                  </div>
+                </div>
+
+                <div class="mock-card">
+                  <div class="mock-card-header">
+                    <span>Gesture Trigger</span>
+                    <span class="mock-tag">Active</span>
+                  </div>
+                  <div class="mock-row">
+                    <div class="mock-icon-box">⚡</div>
+                    <div>
+                      <div class="mock-bold">Double Tap / Squeeze</div>
+                      <div class="mock-dim">Intercepts media button event</div>
+                    </div>
+                  </div>
+                  <div class="mock-pill">Summoning Google Gemini</div>
+                </div>
+
+                <!-- Animated Assistant Waveform -->
+                <div class="mock-wave-container">
+                  <div class="mock-wave-title">
+                    <span class="gemini-sparkle">✨</span> Gemini Voice Ready
+                  </div>
+                  <div class="wave-bars">
+                    <span class="bar b1"></span>
+                    <span class="bar b2"></span>
+                    <span class="bar b3"></span>
+                    <span class="bar b4"></span>
+                    <span class="bar b5"></span>
+                    <span class="bar b6"></span>
+                    <span class="bar b7"></span>
+                  </div>
+                  <div class="mock-wave-caption">"How can I help you today?"</div>
+                </div>
+
+                <div class="mock-card-mini">
+                  <div class="mock-row-between">
+                    <span>Spotify Background Shield</span>
+                    <span class="mock-check">ENABLED</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Decorative Floating Card -->
+          <div class="floating-badge badge-1">
+            <span class="float-icon">🤖</span>
+            <div>
+              <div class="float-title">Google Gemini</div>
+              <div class="float-sub">One-tap voice overlay</div>
+            </div>
+          </div>
+
+          <div class="floating-badge badge-2">
+            <span class="float-icon">🎵</span>
+            <div>
+              <div class="float-title">Music Intercept</div>
+              <div class="float-sub">Spotify & YT Music compatible</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- QR Code Modal (Hidden by default) -->
+    <div id="qr-modal" class="modal-backdrop">
+      <div class="modal-box">
+        <button id="close-modal-btn" class="modal-close">&times;</button>
+        <div class="modal-header">
+          <div class="modal-icon">📲</div>
+          <h3>Scan to Download on Android</h3>
+          <p>Scan this QR code with your phone's camera to download the APK directly to your device.</p>
+        </div>
+        <div class="qr-wrapper">
+          <div id="qrcode"></div>
+        </div>
+        <div class="modal-url-box">
+          <input type="text" id="apk-direct-url" readonly value="" />
+          <button id="copy-url-btn" class="btn btn-sm btn-secondary">Copy Link</button>
+        </div>
+        <p class="modal-tip">Tip: After downloading, open your browser's download notifications and tap to install.</p>
+      </div>
+    </div>
+
+    <!-- Features Section -->
+    <section id="features" class="section">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">Powerful Features</span>
+          <h2 class="section-title">The Missing Bridge for AirPods on Android</h2>
+          <p class="section-desc">AirPods have great hardware, but Android ignores their smart gestures. AirAssistant fixes that forever.</p>
+        </div>
+
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon-wrapper cyan">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+              </svg>
+            </div>
+            <h3>Instant Voice Activation</h3>
+            <p>Double-tap or squeeze your AirPods earbud stems to immediately invoke the Google Gemini or Google Assistant floating interactive voice screen.</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon-wrapper purple">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 18V5l12-2v13"/>
+                <circle cx="6" cy="18" r="3"/>
+                <circle cx="18" cy="16" r="3"/>
+              </svg>
+            </div>
+            <h3>Smart Music Interception</h3>
+            <p>Most Android apps fail when music is playing. AirAssistant's specialized lightweight Accessibility Service intercepts gestures even while Spotify or Apple Music is streaming.</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon-wrapper blue">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
+                <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
+                <line x1="6" y1="6" x2="6.01" y2="6"/>
+                <line x1="6" y1="18" x2="6.01" y2="18"/>
+              </svg>
+            </div>
+            <h3>Device & Battery Manager</h3>
+            <p>Real-time Bluetooth connection monitoring, paired earphone discovery, and customized triggers tailored specifically for your audio gear.</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon-wrapper emerald">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+            </div>
+            <h3>100% Private & Offline</h3>
+            <p>Zero internet tracking, no third-party analytics, and no accounts. All gesture detection and intent routing happens strictly on your local device.</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon-wrapper amber">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+            </div>
+            <h3>Battery & Resource Friendly</h3>
+            <p>No polling loops or background drain. The app leverages Android's native Bluetooth broadcast and media session events, sleeping until you trigger it.</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon-wrapper rose">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+              </svg>
+            </div>
+            <h3>Material 3 Compose UI</h3>
+            <p>Designed strictly following Google's modern Material You standards with smooth fluid animations, dark aesthetics, and haptic feedback.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Compatibility Section -->
+    <section id="compatibility" class="section section-dark">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">Hardware Support</span>
+          <h2 class="section-title">Compatible Devices</h2>
+          <p class="section-desc">Engineered for Apple AirPods, but also works seamlessly with most wireless headphones supporting media controls.</p>
+        </div>
+
+        <div class="compat-grid">
+          <div class="compat-item">
+            <div class="compat-icon">🎧</div>
+            <h4>AirPods (1st, 2nd, 3rd Gen)</h4>
+            <span class="compat-status supported">Fully Supported</span>
+            <p>Double-tap gesture mapped directly to Assistant</p>
+          </div>
+          <div class="compat-item">
+            <div class="compat-icon">🎧</div>
+            <h4>AirPods Pro (1st & 2nd Gen)</h4>
+            <span class="compat-status supported">Fully Supported</span>
+            <p>Force sensor stem press & squeeze gestures</p>
+          </div>
+          <div class="compat-item">
+            <div class="compat-icon">🎧</div>
+            <h4>AirPods Max</h4>
+            <span class="compat-status supported">Fully Supported</span>
+            <p>Digital crown and noise control button triggers</p>
+          </div>
+          <div class="compat-item">
+            <div class="compat-icon">🎵</div>
+            <h4>Sony, Bose & Galaxy Buds</h4>
+            <span class="compat-status supported">Compatible</span>
+            <p>Any Bluetooth audio device sending media key events</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sideloading / Installation Guide -->
+    <section id="install" class="section">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">Simple 4-Step Setup</span>
+          <h2 class="section-title">How to Install on Android</h2>
+          <p class="section-desc">Since AirAssistant is distributed independently as a direct APK, follow these quick steps to get started in under 60 seconds.</p>
+        </div>
+
+        <div class="steps-container">
+          <div class="step-card">
+            <div class="step-number">1</div>
+            <div class="step-content">
+              <h3>Download the APK</h3>
+              <p>Tap the <strong>Download APK</strong> button above on your Android phone (or scan the QR code from your computer).</p>
+              <div class="step-tip">File: <code>AirAssistant-v1.0.0.apk</code> (~58 MB)</div>
+            </div>
+          </div>
+
+          <div class="step-card">
+            <div class="step-number">2</div>
+            <div class="step-content">
+              <h3>Allow Install from Unknown Sources</h3>
+              <p>When you open the downloaded file, Android may display a prompt saying <em>"For your security, your phone is not allowed to install unknown apps from this source"</em>.</p>
+              <div class="step-tip">Tap <strong>Settings</strong> &rarr; Toggle <strong>Allow from this source</strong> &rarr; Tap <strong>Install</strong>.</div>
+            </div>
+          </div>
+
+          <div class="step-card">
+            <div class="step-number">3</div>
+            <div class="step-content">
+              <h3>Open & Grant Permissions</h3>
+              <p>Open AirAssistant. Grant the two straightforward permissions it asks for:</p>
+              <ul class="permission-list">
+                <li><strong>Nearby Devices (Bluetooth):</strong> To detect your connected AirPods.</li>
+                <li><strong>Accessibility Service:</strong> To intercept double-taps while Spotify/music is playing.</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="step-card">
+            <div class="step-number">4</div>
+            <div class="step-content">
+              <h3>Put on AirPods & Double Tap!</h3>
+              <p>Pop in your AirPods, double-tap or squeeze the earbud stem, and speak to Google Gemini or Assistant immediately!</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section id="faq" class="section section-dark">
+      <div class="container faq-container">
+        <div class="section-header">
+          <span class="section-tag">Got Questions?</span>
+          <h2 class="section-title">Frequently Asked Questions</h2>
+        </div>
+
+        <div class="accordion">
+          <div class="accordion-item">
+            <button class="accordion-header">
+              <span>Why isn't this app on the Google Play Store?</span>
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" class="arrow"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div class="accordion-content">
+              <p>AirAssistant is distributed directly as an APK to provide immediate access without paying recurring developer fees or dealing with restrictive store policies regarding Accessibility Service media interception. It is 100% free, safe, and open for everyone.</p>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <button class="accordion-header">
+              <span>Is installing an APK safe?</span>
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" class="arrow"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div class="accordion-content">
+              <p>Yes, completely safe! The app contains zero ads, zero trackers, and requires no internet permission to function. Everything runs locally on your Android device.</p>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <button class="accordion-header">
+              <span>Why does the app ask for Accessibility Permission?</span>
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" class="arrow"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div class="accordion-content">
+              <p>On Android, when you are listening to Spotify, YouTube Music, or Podcasts, the music player claims exclusive ownership over Bluetooth media buttons. The Accessibility Service allows AirAssistant to detect the double-tap gesture and launch your AI assistant without breaking or crashing playback.</p>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <button class="accordion-header">
+              <span>Can I choose Google Gemini instead of Google Assistant?</span>
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" class="arrow"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div class="accordion-content">
+              <p>Yes! AirAssistant includes dedicated launcher logic for the Google Gemini app (<code>com.google.android.apps.bard</code>) and seamlessly falls back to the Google Assistant voice assist overlay.</p>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <button class="accordion-header">
+              <span>Does this drain my battery?</span>
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" class="arrow"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div class="accordion-content">
+              <p>No. AirAssistant uses passive event listeners registered through Android's system event bus. It does not run CPU-intensive polling, wake locks, or GPS tracking in the background.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bottom Download Banner -->
+    <section class="section cta-banner-section">
+      <div class="container">
+        <div class="cta-banner">
+          <div class="cta-content">
+            <h2>Ready to transform your AirPods on Android?</h2>
+            <p>Download AirAssistant v1.0.0 now and experience hands-free AI wherever you go.</p>
+          </div>
+          <div class="cta-button-wrapper">
+            <a href="#" class="btn btn-lg btn-primary pulse-btn trigger-download">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+              <span>Download APK (Free)</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container footer-content">
+      <div class="footer-left">
+        <div class="brand">
+          <span class="brand-name">AirAssistant</span>
+        </div>
+        <p class="footer-tagline">Created with ❤️ for Android & AirPods power users.</p>
+        <p class="disclaimer">AirAssistant is an independent open utility. "AirPods" is a registered trademark of Apple Inc. "Google Assistant" and "Google Gemini" are trademarks of Google LLC.</p>
+      </div>
+
+      <div class="footer-right">
+        <div class="footer-links">
+          <a href="#features">Features</a>
+          <a href="#install">Install Guide</a>
+          <a href="#faq">FAQ</a>
+          <a href="#download">Download</a>
+        </div>
+        <p class="copyright">&copy; 2026 Ahmer. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
