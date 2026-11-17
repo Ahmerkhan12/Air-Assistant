@@ -10,6 +10,7 @@
 </p>
 
 <p align="center">
+  <a href="https://website-two-pink-76.vercel.app"><img src="https://img.shields.io/badge/Live%20Website-Vercel-black?style=flat-square&logo=vercel" alt="Live Website"></a>
   <a href="https://github.com/Ahmerkhan12/Air-Assistant/releases/latest"><img src="https://img.shields.io/badge/Release-v1.0.0-blue.svg?style=flat-square" alt="Version"></a>
   <img src="https://img.shields.io/badge/Platform-Android%2010%2B%20(API%2029--35)-brightgreen.svg?style=flat-square" alt="Platform">
   <img src="https://img.shields.io/badge/Language-Kotlin%20%2F%20Compose-purple.svg?style=flat-square" alt="Language">
@@ -127,3 +128,4 @@ This project is open-source under the [MIT License](LICENSE).
 ## ⚠️ Disclaimer
 
 *AirAssistant is an independent project. "AirPods", "Apple", and "Siri" are registered trademarks of Apple Inc. "Android", "Google Assistant", and "Google Gemini" are trademarks of Google LLC. This app is not affiliated with or endorsed by Apple Inc. or Google LLC.*
+
