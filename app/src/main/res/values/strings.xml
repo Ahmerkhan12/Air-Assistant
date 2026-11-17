@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">AirAssistant</string>
+    <string name="notification_channel_name">AirAssistant Service</string>
+    <string name="notification_channel_desc">Monitors AirPods Bluetooth media controls</string>
+    <string name="service_running_title">AirPods Assistant Active</string>
+    <string name="service_running_desc">Listening for AirPods gestures to launch Assistant</string>
+    <string name="accessibility_service_desc">Enables AirAssistant to intercept AirPods double-tap gestures even while Spotify or music is actively playing.</string>
+</resources>
+

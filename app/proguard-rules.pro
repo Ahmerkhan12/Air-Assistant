@@ -1,0 +1,2 @@
+# AirAssistant Proguard rules
+
