@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://website-two-pink-76.vercel.app"><img src="https://img.shields.io/badge/Live%20Website-Vercel-black?style=flat-square&logo=vercel" alt="Live Website"></a>
+  <a href="https://airassistant.vercel.app"><img src="https://img.shields.io/badge/Live%20Website-airassistant.vercel.app-black?style=flat-square&logo=vercel" alt="Live Website"></a>
   <a href="https://github.com/Ahmerkhan12/Air-Assistant/releases/latest"><img src="https://img.shields.io/badge/Release-v1.0.0-blue.svg?style=flat-square" alt="Version"></a>
   <img src="https://img.shields.io/badge/Platform-Android%2010%2B%20(API%2029--35)-brightgreen.svg?style=flat-square" alt="Platform">
   <img src="https://img.shields.io/badge/Language-Kotlin%20%2F%20Compose-purple.svg?style=flat-square" alt="Language">
