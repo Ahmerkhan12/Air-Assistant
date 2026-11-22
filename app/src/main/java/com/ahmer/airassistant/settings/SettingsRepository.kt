@@ -46,7 +46,10 @@ data class UserSettings(
     val autoStartOnAirPodsConnect: Boolean = true,
     val passThroughToMusicApp: Boolean = true,
     val testModeEnabled: Boolean = false,
-    val selectedDeviceAddress: String? = null
+    val selectedDeviceAddress: String? = null,
+    val inEarDetectionEnabled: Boolean = true,
+    val showBatteryNotification: Boolean = true,
+    val lowBatteryAlertsEnabled: Boolean = true
 )
 
 class SettingsRepository(private val context: Context) {
@@ -57,14 +60,17 @@ class SettingsRepository(private val context: Context) {
         val PASS_THROUGH = booleanPreferencesKey("pass_through_to_music")
         val TEST_MODE = booleanPreferencesKey("test_mode")
         val SELECTED_DEVICE_ADDRESS = stringPreferencesKey("selected_device_address")
+        val IN_EAR_DETECTION = booleanPreferencesKey("in_ear_detection")
+        val SHOW_BATTERY_NOTIFICATION = booleanPreferencesKey("show_battery_notification")
+        val LOW_BATTERY_ALERTS = booleanPreferencesKey("low_battery_alerts")
     }
 
     val userSettingsFlow: Flow<UserSettings> = context.dataStore.data.map { preferences ->
-        val gestureStr = preferences[PreferencesKeys.TRIGGER_GESTURE] ?: TriggerGesture.DOUBLE_PRESS.name
+        val gestureStr = preferences[PreferencesKeys.TRIGGER_GESTURE]
         val gesture = try {
-            TriggerGesture.valueOf(gestureStr)
+            if (gestureStr != null) TriggerGesture.valueOf(gestureStr) else TriggerGesture.SINGLE_TAP_AIRPODS_1
         } catch (e: Exception) {
-            TriggerGesture.DOUBLE_PRESS
+            TriggerGesture.SINGLE_TAP_AIRPODS_1
         }
 
         UserSettings(
@@ -72,7 +78,10 @@ class SettingsRepository(private val context: Context) {
             autoStartOnAirPodsConnect = preferences[PreferencesKeys.AUTO_START] ?: true,
             passThroughToMusicApp = preferences[PreferencesKeys.PASS_THROUGH] ?: true,
             testModeEnabled = preferences[PreferencesKeys.TEST_MODE] ?: false,
-            selectedDeviceAddress = preferences[PreferencesKeys.SELECTED_DEVICE_ADDRESS]
+            selectedDeviceAddress = preferences[PreferencesKeys.SELECTED_DEVICE_ADDRESS],
+            inEarDetectionEnabled = preferences[PreferencesKeys.IN_EAR_DETECTION] ?: true,
+            showBatteryNotification = preferences[PreferencesKeys.SHOW_BATTERY_NOTIFICATION] ?: true,
+            lowBatteryAlertsEnabled = preferences[PreferencesKeys.LOW_BATTERY_ALERTS] ?: true
         )
     }
 
@@ -81,6 +90,27 @@ class SettingsRepository(private val context: Context) {
             preferences[PreferencesKeys.TRIGGER_GESTURE] = gesture.name
         }
     }
+
+    suspend fun updateAutoStart(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.AUTO_START] = enabled
+        }
+    }
+    suspend fun setAutoStart(enabled: Boolean) = updateAutoStart(enabled)
+
+    suspend fun updatePassThrough(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.PASS_THROUGH] = enabled
+        }
+    }
+    suspend fun setPassThrough(enabled: Boolean) = updatePassThrough(enabled)
+
+    suspend fun updateTestMode(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.TEST_MODE] = enabled
+        }
+    }
+    suspend fun setTestMode(enabled: Boolean) = updateTestMode(enabled)
 
     suspend fun setSelectedDeviceAddress(address: String?) {
         context.dataStore.edit { preferences ->
@@ -92,16 +122,21 @@ class SettingsRepository(private val context: Context) {
         }
     }
 
-    suspend fun setAutoStart(enabled: Boolean) {
+    suspend fun updateInEarDetection(enabled: Boolean) {
         context.dataStore.edit { preferences ->
-            preferences[PreferencesKeys.AUTO_START] = enabled
+            preferences[PreferencesKeys.IN_EAR_DETECTION] = enabled
         }
     }
 
-    suspend fun setPassThrough(enabled: Boolean) {
+    suspend fun updateShowBatteryNotification(enabled: Boolean) {
         context.dataStore.edit { preferences ->
-            preferences[PreferencesKeys.PASS_THROUGH] = enabled
+            preferences[PreferencesKeys.SHOW_BATTERY_NOTIFICATION] = enabled
+        }
+    }
+
+    suspend fun updateLowBatteryAlerts(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.LOW_BATTERY_ALERTS] = enabled
         }
     }
 }
-

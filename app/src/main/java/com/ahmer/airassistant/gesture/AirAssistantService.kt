@@ -1,6 +1,8 @@
 package com.ahmer.airassistant.gesture
 
 import android.app.Notification
+import android.app.NotificationManager
+import com.ahmer.airassistant.bluetooth.AirPodsBatteryInfo
 import android.app.PendingIntent
 import android.app.Service
 import android.content.BroadcastReceiver
@@ -75,6 +77,12 @@ class AirAssistantService : Service() {
 
         settingsRepository.userSettingsFlow.onEach { settings ->
             gestureDetector.setConfiguredGesture(settings.triggerGesture)
+        }.launchIn(scope)
+
+        // Observe battery updates to dynamically refresh notification shade
+        MediaEventBus.latestBattery.onEach { battery ->
+            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
+            notificationManager?.notify(NOTIFICATION_ID, createNotification(battery))
         }.launchIn(scope)
 
         setupMediaSession()
@@ -235,7 +243,7 @@ class AirAssistantService : Service() {
         }
     }
 
-    private fun createNotification(): Notification {
+    private fun createNotification(battery: AirPodsBatteryInfo? = null): Notification {
         val activityIntent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
@@ -244,9 +252,26 @@ class AirAssistantService : Service() {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
+        val title = when {
+            battery?.isLowBattery == true -> "AirPods Connected (Low Battery!)"
+            !battery?.modelName.isNullOrBlank() -> "${battery?.modelName} Active"
+            else -> getString(R.string.service_running_title)
+        }
+
+        val text = when {
+            battery?.hasSeparateLevels == true -> {
+                val left = battery.left?.let { "🎧 L: $it%" } ?: ""
+                val case = battery.case?.let { "🔋 Case: $it%" } ?: ""
+                val right = battery.right?.let { "🎧 R: $it%" } ?: ""
+                listOf(left, case, right).filter { it.isNotBlank() }.joinToString("  •  ")
+            }
+            battery?.hasOverall == true -> "🎧 AirPods Battery: ${battery.overall}%"
+            else -> getString(R.string.service_running_desc)
+        }
+
         return NotificationCompat.Builder(this, AirAssistantApp.CHANNEL_ID)
-            .setContentTitle(getString(R.string.service_running_title))
-            .setContentText(getString(R.string.service_running_desc))
+            .setContentTitle(title)
+            .setContentText(text)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setContentIntent(pendingIntent)
             .setOngoing(true)

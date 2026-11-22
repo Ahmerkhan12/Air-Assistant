@@ -22,6 +22,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ahmer.airassistant.assistant.AssistantLauncher
+import com.ahmer.airassistant.audio.AirPodsChirpPlayer
+import com.ahmer.airassistant.audio.ChirpTarget
 import com.ahmer.airassistant.audio.AudioManagerHelper
 import com.ahmer.airassistant.gesture.AirAccessibilityService
 import com.ahmer.airassistant.settings.SettingsRepository
@@ -42,6 +44,16 @@ fun SettingsScreen(
 
     var routingState by remember { mutableStateOf(audioManagerHelper.getAudioRoutingState()) }
     val isAccessibilityEnabled = AirAccessibilityService.isAccessibilityServiceEnabled(context)
+
+    val chirpPlayer = remember { AirPodsChirpPlayer() }
+    var isChirping by remember { mutableStateOf(false) }
+    var chirpTarget by remember { mutableStateOf(ChirpTarget.BOTH) }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            chirpPlayer.stopChirp()
+        }
+    }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -306,6 +318,186 @@ fun SettingsScreen(
                         checked = userSettings.passThroughToMusicApp,
                         onCheckedChange = { coroutineScope.launch { settingsRepository.setPassThrough(it) } }
                     )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // In-Ear Auto Pause / Resume
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "In-Ear Auto-Pause / Resume",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Text(
+                            text = "Auto-pause Spotify when an earbud is removed, auto-resume when inserted",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Switch(
+                        checked = userSettings.inEarDetectionEnabled,
+                        onCheckedChange = { coroutineScope.launch { settingsRepository.updateInEarDetection(it) } }
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Battery Notification in Status Bar
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Live Battery Notification",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Text(
+                            text = "Display ongoing Left, Right, and Case battery in notification shade",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Switch(
+                        checked = userSettings.showBatteryNotification,
+                        onCheckedChange = { coroutineScope.launch { settingsRepository.updateShowBatteryNotification(it) } }
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Low Battery Alerts
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Low Battery Warnings (< 20%)",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Text(
+                            text = "Alert when any earbud or case drops below 20%",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Switch(
+                        checked = userSettings.lowBatteryAlertsEnabled,
+                        onCheckedChange = { coroutineScope.launch { settingsRepository.updateLowBatteryAlerts(it) } }
+                    )
+                }
+            }
+        }
+
+        // Section 5: Find My AirPods (Audio Chirp Locator)
+        item {
+            M3Card {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Surface(
+                        shape = RoundedCornerShape(14.dp),
+                        color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),
+                        modifier = Modifier.size(46.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                Icons.Default.VolumeUp,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.tertiary,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.width(14.dp))
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Find My AirPods (Audio Locator)",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "Plays a loud high-pitched chirp to help locate a misplaced earbud",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // Channel Selector Chips (Left, Both, Right)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    FilterChip(
+                        selected = chirpTarget == ChirpTarget.LEFT_ONLY,
+                        onClick = { chirpTarget = ChirpTarget.LEFT_ONLY },
+                        label = { Text("Left Pod Only") },
+                        modifier = Modifier.weight(1f)
+                    )
+                    FilterChip(
+                        selected = chirpTarget == ChirpTarget.BOTH,
+                        onClick = { chirpTarget = ChirpTarget.BOTH },
+                        label = { Text("Both Pods") },
+                        modifier = Modifier.weight(1f)
+                    )
+                    FilterChip(
+                        selected = chirpTarget == ChirpTarget.RIGHT_ONLY,
+                        onClick = { chirpTarget = ChirpTarget.RIGHT_ONLY },
+                        label = { Text("Right Pod Only") },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                Button(
+                    onClick = {
+                        if (isChirping) {
+                            chirpPlayer.stopChirp()
+                            isChirping = false
+                        } else {
+                            isChirping = true
+                            chirpPlayer.startChirp(target = chirpTarget) {
+                                isChirping = false
+                            }
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isChirping) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.tertiary
+                    )
+                ) {
+                    Icon(
+                        if (isChirping) Icons.Default.Stop else Icons.Default.VolumeUp,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(if (isChirping) "Stop Chirp Sound" else "Play High-Pitch Chirp")
                 }
             }
         }

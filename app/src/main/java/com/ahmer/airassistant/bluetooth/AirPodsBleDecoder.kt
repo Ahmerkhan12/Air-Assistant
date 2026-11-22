@@ -21,7 +21,6 @@ object AirPodsBleDecoder {
 
             val length = manufacturerData[1].toInt() and 0xFF
             if (manufacturerData.size < 6 || (length > 0 && manufacturerData.size < length + 2)) {
-                // Not enough bytes
                 return null
             }
 
@@ -42,7 +41,7 @@ object AirPodsBleDecoder {
             val byte5 = manufacturerData[5].toInt() and 0xFF
             val isFlipped = (byte5 and 0x20) != 0
 
-            // Determine left vs right based on flip bit
+            // Determine left vs right battery based on flip bit
             val (rawLeft, rawRight) = if (isFlipped) {
                 Pair(rawPodB, rawPodA)
             } else {
@@ -59,6 +58,17 @@ object AirPodsBleDecoder {
                 Pair(isPodBCharging, isPodACharging)
             } else {
                 Pair(isPodACharging, isPodBCharging)
+            }
+
+            // In-ear detection bits in Byte 5:
+            // Bit 1 = Pod A in-ear, Bit 3 = Pod B in-ear
+            val isPodAInEar = (byte5 and 0x02) != 0
+            val isPodBInEar = (byte5 and 0x08) != 0
+
+            val (isLeftInEar, isRightInEar) = if (isFlipped) {
+                Pair(isPodBInEar, isPodAInEar)
+            } else {
+                Pair(isPodAInEar, isPodBInEar)
             }
 
             // Values: 0..10 represent 0%..100% (value * 10, or 100% for 10).
@@ -78,6 +88,9 @@ object AirPodsBleDecoder {
                 isLeftCharging = isLeftCharging,
                 isRightCharging = isRightCharging,
                 isCaseCharging = isCaseCharging,
+                isLeftInEar = isLeftInEar,
+                isRightInEar = isRightInEar,
+                isInEarSupported = true,
                 modelName = modelName,
                 lastUpdated = System.currentTimeMillis()
             )
@@ -107,4 +120,3 @@ object AirPodsBleDecoder {
         }
     }
 }
-

@@ -1,5 +1,6 @@
 package com.ahmer.airassistant.gesture
 
+import com.ahmer.airassistant.bluetooth.AirPodsBatteryInfo
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,6 +15,9 @@ object MediaEventBus {
     private val _isServiceRunning = MutableStateFlow(false)
     val isServiceRunning: StateFlow<Boolean> = _isServiceRunning.asStateFlow()
 
+    private val _latestBattery = MutableStateFlow<AirPodsBatteryInfo?>(null)
+    val latestBattery: StateFlow<AirPodsBatteryInfo?> = _latestBattery.asStateFlow()
+
     fun postEvent(event: MediaButtonEvent) {
         _events.update { currentList ->
             val updated = listOf(event) + currentList
@@ -25,8 +29,11 @@ object MediaEventBus {
         _isServiceRunning.value = running
     }
 
+    fun updateBattery(info: AirPodsBatteryInfo) {
+        _latestBattery.value = info
+    }
+
     fun clearEvents() {
         _events.value = emptyList()
     }
 }
-

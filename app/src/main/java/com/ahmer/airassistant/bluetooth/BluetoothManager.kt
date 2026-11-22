@@ -22,6 +22,8 @@ import android.media.AudioManager
 import android.os.Build
 import android.util.Log
 import androidx.core.content.ContextCompat
+import android.view.KeyEvent
+import com.ahmer.airassistant.gesture.MediaEventBus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -236,13 +238,52 @@ class AirBluetoothManager(private val context: Context) {
         }
     }
 
+    private var lastLeftInEar: Boolean? = null
+    private var lastRightInEar: Boolean? = null
+
     private fun updateAirPodsBattery(newBattery: AirPodsBatteryInfo) {
+        MediaEventBus.updateBattery(newBattery)
+        handleInEarDetection(newBattery)
+
         _bluetoothState.update { current ->
             val updatedActive = current.activeAirPods?.copy(batteryInfo = newBattery)
             current.copy(
                 latestBatteryInfo = newBattery,
                 activeAirPods = updatedActive
             )
+        }
+    }
+
+    private fun handleInEarDetection(battery: AirPodsBatteryInfo) {
+        if (!battery.isInEarSupported) return
+
+        val prevLeft = lastLeftInEar
+        val prevRight = lastRightInEar
+
+        lastLeftInEar = battery.isLeftInEar
+        lastRightInEar = battery.isRightInEar
+
+        // Only react after baseline is established
+        if (prevLeft == null && prevRight == null) return
+
+        val wasInEar = (prevLeft == true) || (prevRight == true)
+        val nowInEar = battery.isLeftInEar || battery.isRightInEar
+
+        if (wasInEar && !nowInEar) {
+            Log.d(tag, "In-Ear Detection: Earbud removed from ear -> Pausing playback")
+            sendMediaKey(KeyEvent.KEYCODE_MEDIA_PAUSE)
+        } else if (!wasInEar && nowInEar) {
+            Log.d(tag, "In-Ear Detection: Earbud inserted into ear -> Resuming playback")
+            sendMediaKey(KeyEvent.KEYCODE_MEDIA_PLAY)
+        }
+    }
+
+    private fun sendMediaKey(keyCode: Int) {
+        try {
+            audioManager?.dispatchMediaKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, keyCode))
+            audioManager?.dispatchMediaKeyEvent(KeyEvent(KeyEvent.ACTION_UP, keyCode))
+        } catch (e: Exception) {
+            Log.w(tag, "Failed to dispatch in-ear media key: ${e.message}")
         }
     }
 

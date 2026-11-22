@@ -8,6 +8,9 @@ data class AirPodsBatteryInfo(
     val isLeftCharging: Boolean = false,
     val isRightCharging: Boolean = false,
     val isCaseCharging: Boolean = false,
+    val isLeftInEar: Boolean = false,
+    val isRightInEar: Boolean = false,
+    val isInEarSupported: Boolean = false,
     val modelName: String = "AirPods",
     val lastUpdated: Long = System.currentTimeMillis()
 ) {
@@ -46,4 +49,3 @@ data class AirPodsBatteryInfo(
             return if (warnings.isNotEmpty()) "Low Battery: ${warnings.joinToString(", ")}" else null
         }
 }
-
